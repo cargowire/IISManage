@@ -10,6 +10,8 @@ namespace IISManage
 	{
 		static void Main(string[] args)
 		{
+			bool showHelp = false;
+
 			string sitename = string.Empty;
 			string sitesfolder = string.Empty;
 			string logsfolder = string.Empty;
@@ -21,6 +23,7 @@ namespace IISManage
 					{ "sf|sitefolder=", "The physical folder to store the site (is string formatted with the sitename).", (v) => sitesfolder = v },
 					{ "lf|logsfolder=", "The physical folder to store the logs of the site (is string formatted with the sitename).", (v) => logsfolder = v },
 					{ "a|apppool=", "The name of the application pool to use/create.", (v) => apppoolname = v },
+					{ "h|help",  "show this message and exit", v => showHelp = v != null }
 				};
 
 			try
@@ -29,9 +32,15 @@ namespace IISManage
 			}
 			catch (OptionException e)
 			{
-				Console.Write("ServCheck Tasks: ");
+				Console.Write("IISManage: ");
 				Console.WriteLine(e.Message);
-				Console.WriteLine("Try 'servcheck.tasks --help' for more information.");
+				Console.WriteLine("Try 'IISManage --help' for more information.");
+				return;
+			}
+
+			if (showHelp)
+			{
+				ShowHelp(p);
 				return;
 			}
 
@@ -40,7 +49,6 @@ namespace IISManage
 
 			if (string.IsNullOrEmpty(sitesfolder))
 				throw new ArgumentNullException("sitefolder");
-
 
 			var sitelocation = CreateFolder(string.Format(sitesfolder, sitename));
 			var logs = CreateFolder(string.Format(logsfolder, sitename));
@@ -52,6 +60,14 @@ namespace IISManage
 
 				serverManager.CommitChanges();
 			}
+		}
+
+		private static void ShowHelp(OptionSet p)
+		{
+			System.Console.WriteLine("Usage: IISManage [OPTIONS]");
+			System.Console.WriteLine();
+			System.Console.WriteLine("Options:");
+			p.WriteOptionDescriptions(System.Console.Out);
 		}
 
 		private static DirectoryInfo CreateFolder(string path)
