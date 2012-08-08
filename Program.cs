@@ -6,9 +6,9 @@ using NDesk.Options;
 
 namespace IISManage
 {
-	class Program
+	public class Program
 	{
-		static void Main(string[] args)
+		public static void Main(string[] args)
 		{
 			var showHelp = false;
 
@@ -18,6 +18,7 @@ namespace IISManage
 			var logsfolder = string.Empty;
 			var apppoolname = System.Configuration.ConfigurationManager.AppSettings["DefaultAppPool"];
 			var stringtoreplace = System.Configuration.ConfigurationManager.AppSettings["RemoveFromBranchName"];
+			var appPoolDotNetVersion = System.Configuration.ConfigurationManager.AppSettings["AppPoolDotNetVersion"];
 
 			var branch = string.Empty;
 			var defaultbranch = string.Empty;
@@ -30,6 +31,7 @@ namespace IISManage
 					{ "a|apppool=", "The name of the application pool to use/create.", (v) => apppoolname = v },
 					{ "b|branch=", "The branch (assuming source control) that is being used for this site.", (v) => branch = v },
 					{ "db|defaultbranch=", "The default branch (assuming source control) that is being used for this site.", (v) => defaultbranch = v },
+					{ "apv|apppoolversion=", "The version of .NET which the application pool runs in", (v) => appPoolDotNetVersion = v },
 					{ "h|help",  "show this message and exit", v => showHelp = v != null }
 				};
 
@@ -70,7 +72,7 @@ namespace IISManage
 
 			using (var serverManager = new ServerManager())
 			{
-				CreateApplicationPool(serverManager, apppoolname, "v4.0");
+				CreateApplicationPool(serverManager, apppoolname, appPoolDotNetVersion);
 				var site = CreateWebsite(serverManager, sitename, sitelocation, logs, apppoolname);
 
 				serverManager.CommitChanges();
