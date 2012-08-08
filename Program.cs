@@ -6,22 +6,24 @@ using NDesk.Options;
 
 namespace IISManage
 {
-	class Program
+	public class Program
 	{
-		static void Main(string[] args)
+		public static void Main(string[] args)
 		{
-			bool showHelp = false;
+			var showHelp = false;
 
-			string sitename = string.Empty;
+			var sitename = string.Empty;
 			string branchsitename = null;
-			string sitesfolder = string.Empty;
-			string logsfolder = string.Empty;
-			string apppoolname = "Sites";
+			var sitesfolder = string.Empty;
+			var logsfolder = string.Empty;
+			var apppoolname = System.Configuration.ConfigurationManager.AppSettings["DefaultAppPool"];
+			var stringtoreplace = System.Configuration.ConfigurationManager.AppSettings["RemoveFromBranchName"];
+			var appPoolDotNetVersion = System.Configuration.ConfigurationManager.AppSettings["AppPoolDotNetVersion"];
 
-			string branch = string.Empty;
-			string defaultbranch = string.Empty;
+			var branch = string.Empty;
+			var defaultbranch = string.Empty;
 
-			var p = new OptionSet() 
+			var p = new OptionSet
 				{
 					{ "s|site=", "The name of the site to create (doubles as host header).", (v) => sitename = v },
 					{ "sf|sitefolder=", "The physical folder to store the site (is string formatted with the sitename).", (v) => sitesfolder = v },
@@ -29,6 +31,7 @@ namespace IISManage
 					{ "a|apppool=", "The name of the application pool to use/create.", (v) => apppoolname = v },
 					{ "b|branch=", "The branch (assuming source control) that is being used for this site.", (v) => branch = v },
 					{ "db|defaultbranch=", "The default branch (assuming source control) that is being used for this site.", (v) => defaultbranch = v },
+					{ "apv|apppoolversion=", "The version of .NET which the application pool runs in", (v) => appPoolDotNetVersion = v },
 					{ "h|help",  "show this message and exit", v => showHelp = v != null }
 				};
 
@@ -36,9 +39,11 @@ namespace IISManage
 			{
 				p.Parse(args);
 
-				if(!string.IsNullOrEmpty(branch))
+				if (!string.IsNullOrEmpty(branch))
 				{
-					if(string.Compare(branch, defaultbranch, true) != 0)
+					branch = branch.Replace(stringtoreplace, string.Empty);
+
+					if (!branch.Equals(defaultbranch, StringComparison.InvariantCultureIgnoreCase))
 						branchsitename = string.Concat(branch, ".", sitename);
 				}
 			}
@@ -67,7 +72,7 @@ namespace IISManage
 
 			using (var serverManager = new ServerManager())
 			{
-				CreateApplicationPool(serverManager, apppoolname, "v4.0");
+				CreateApplicationPool(serverManager, apppoolname, appPoolDotNetVersion);
 				var site = CreateWebsite(serverManager, sitename, sitelocation, logs, apppoolname);
 
 				serverManager.CommitChanges();
@@ -76,27 +81,27 @@ namespace IISManage
 
 		private static void ShowHelp(OptionSet p)
 		{
-			System.Console.WriteLine("Usage: IISManage [OPTIONS]");
-			System.Console.WriteLine();
-			System.Console.WriteLine("Options:");
-			p.WriteOptionDescriptions(System.Console.Out);
+			Console.WriteLine("Usage: IISManage [OPTIONS]");
+			Console.WriteLine();
+			Console.WriteLine("Options:");
+			p.WriteOptionDescriptions(Console.Out);
 		}
 
 		private static DirectoryInfo CreateFolder(string path)
 		{
 			if (!Directory.Exists(path))
 				return Directory.CreateDirectory(path);
-			else
-				return new DirectoryInfo(path);
+			
+			return new DirectoryInfo(path);
 		}
 
 		private static ApplicationPool CreateApplicationPool(ServerManager serverManager, string appPool, string runtimeVersion)
 		{
-			ApplicationPool iisAppPool = serverManager.ApplicationPools[appPool];
+			var iisAppPool = serverManager.ApplicationPools[appPool];
 			if (iisAppPool == null)
 				iisAppPool = serverManager.ApplicationPools.Add(appPool);
 
-			iisAppPool.ManagedRuntimeVersion = "v4.0";
+			iisAppPool.ManagedRuntimeVersion = runtimeVersion;
 
 			return iisAppPool;
 		}
@@ -113,6 +118,6 @@ namespace IISManage
 			iisSite.ServerAutoStart = true;
 
 			return iisSite;
-		}	
+		}
 	}
 }

@@ -33,3 +33,5 @@ obj/
 ehthumbs.db
 Thumbs.db
 *.csproj.user
+*ReSharper*
+packages/*/*
