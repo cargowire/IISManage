@@ -13,9 +13,13 @@ namespace IISManage
 			bool showHelp = false;
 
 			string sitename = string.Empty;
+			string branchsitename = null;
 			string sitesfolder = string.Empty;
 			string logsfolder = string.Empty;
 			string apppoolname = "Sites";
+
+			string branch = string.Empty;
+			string defaultbranch = string.Empty;
 
 			var p = new OptionSet() 
 				{
@@ -23,12 +27,20 @@ namespace IISManage
 					{ "sf|sitefolder=", "The physical folder to store the site (is string formatted with the sitename).", (v) => sitesfolder = v },
 					{ "lf|logsfolder=", "The physical folder to store the logs of the site (is string formatted with the sitename).", (v) => logsfolder = v },
 					{ "a|apppool=", "The name of the application pool to use/create.", (v) => apppoolname = v },
+					{ "b|branch=", "The branch (assuming source control) that is being used for this site.", (v) => branch = v },
+					{ "db|defaultbranch=", "The default branch (assuming source control) that is being used for this site.", (v) => defaultbranch = v },
 					{ "h|help",  "show this message and exit", v => showHelp = v != null }
 				};
 
 			try
 			{
 				p.Parse(args);
+
+				if(!string.IsNullOrEmpty(branch))
+				{
+					if(string.Compare(branch, defaultbranch, true) != 0)
+						branchsitename = string.Concat(branch, ".", sitename);
+				}
 			}
 			catch (OptionException e)
 			{
@@ -50,8 +62,8 @@ namespace IISManage
 			if (string.IsNullOrEmpty(sitesfolder))
 				throw new ArgumentNullException("sitefolder");
 
-			var sitelocation = CreateFolder(string.Format(sitesfolder, sitename));
-			var logs = CreateFolder(string.Format(logsfolder, sitename));
+			var sitelocation = CreateFolder(string.Format(sitesfolder, branchsitename ?? sitename));
+			var logs = CreateFolder(string.Format(logsfolder, branchsitename ?? sitename));
 
 			using (var serverManager = new ServerManager())
 			{
