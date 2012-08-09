@@ -73,7 +73,7 @@ namespace IISManage
 			using (var serverManager = new ServerManager())
 			{
 				CreateApplicationPool(serverManager, apppoolname, appPoolDotNetVersion);
-				var site = CreateWebsite(serverManager, sitename, sitelocation, logs, apppoolname);
+				var site = CreateWebsite(serverManager, branchsitename ?? sitename, sitelocation, logs, apppoolname);
 
 				serverManager.CommitChanges();
 			}
