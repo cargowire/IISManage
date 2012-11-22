@@ -35,3 +35,5 @@ Thumbs.db
 *.csproj.user
 *ReSharper*
 packages/*/*
+*user
+*ncrunch*
